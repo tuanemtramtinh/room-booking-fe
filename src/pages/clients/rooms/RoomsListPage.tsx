@@ -1,8 +1,14 @@
 import { Link } from "react-router";
-import { useRooms } from "../../../context/RoomContext";
+import { useRoomsQuery } from "../../../hooks/useRoomsQuery";
+
+const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
+  AVAILABLE: { label: "Còn trống", cls: "badge-success" },
+  OCCUPIED: { label: "Đang dùng", cls: "badge-warning" },
+  MAINTENANCE: { label: "Bảo trì", cls: "badge-error" },
+};
 
 export default function RoomsListPage() {
-  const { rooms, deleteRoom } = useRooms();
+  const { data: rooms, isLoading, isError } = useRoomsQuery();
 
   return (
     <div>
@@ -10,7 +16,7 @@ export default function RoomsListPage() {
         <div>
           <h1 className="text-2xl font-bold text-base-content">Danh sách phòng</h1>
           <p className="text-sm text-base-content/50 mt-0.5">
-            {rooms.length} phòng đang quản lý
+            {rooms ? `${rooms.length} phòng đang quản lý` : "Đang tải..."}
           </p>
         </div>
         <Link to="/rooms/add" className="btn btn-primary btn-sm gap-2">
@@ -28,7 +34,35 @@ export default function RoomsListPage() {
         </Link>
       </div>
 
-      {rooms.length === 0 ? (
+      {/* Loading */}
+      {isLoading && (
+        <div className="card bg-base-100 border border-base-200 shadow-sm">
+          <div className="card-body items-center py-16">
+            <span className="loading loading-spinner loading-md text-primary" />
+            <p className="text-sm text-base-content/40 mt-2">Đang tải danh sách phòng...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error */}
+      {isError && (
+        <div role="alert" className="alert alert-error">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="size-5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span>Không thể tải danh sách phòng. Vui lòng kiểm tra kết nối.</span>
+        </div>
+      )}
+
+      {/* Empty */}
+      {!isLoading && !isError && rooms?.length === 0 && (
         <div className="card bg-base-100 border border-base-200 shadow-sm">
           <div className="card-body items-center text-center py-16">
             <svg
@@ -46,48 +80,60 @@ export default function RoomsListPage() {
               />
             </svg>
             <p className="text-base-content/50 font-medium">Chưa có phòng nào</p>
-            <p className="text-sm text-base-content/30 mb-4">
-              Bắt đầu bằng cách thêm phòng đầu tiên
-            </p>
-            <Link to="/rooms/add" className="btn btn-primary btn-sm">
+            <Link to="/rooms/add" className="btn btn-primary btn-sm mt-4">
               Thêm phòng ngay
             </Link>
           </div>
         </div>
-      ) : (
+      )}
+
+      {/* Table */}
+      {!isLoading && !isError && rooms && rooms.length > 0 && (
         <div className="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="table table-zebra">
               <thead>
                 <tr className="bg-base-200/60 text-base-content/70 text-xs uppercase tracking-wider">
-                  <th className="w-16">STT</th>
+                  <th className="w-14">STT</th>
                   <th>Tên phòng</th>
+                  <th>Vị trí</th>
                   <th>Sức chứa</th>
-                  <th className="text-right">Thao tác</th>
+                  <th>Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
-                {rooms.map((room, idx) => (
-                  <tr key={room.id} className="hover:bg-base-200/40 transition-colors">
-                    <td className="text-base-content/40 font-mono text-sm">
-                      {String(idx + 1).padStart(2, "0")}
-                    </td>
-                    <td className="font-medium text-base-content">{room.name}</td>
-                    <td>
-                      <span className="badge badge-ghost badge-sm">
-                        {room.capacity} người
-                      </span>
-                    </td>
-                    <td className="text-right">
-                      <button
-                        className="btn btn-error btn-xs"
-                        onClick={() => deleteRoom(room.id)}
-                      >
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {rooms.map((room, idx) => {
+                  const status = STATUS_LABEL[room.status] ?? {
+                    label: room.status,
+                    cls: "badge-ghost",
+                  };
+                  return (
+                    <tr key={room.id} className="hover:bg-base-200/40 transition-colors">
+                      <td className="text-base-content/40 font-mono text-sm">
+                        {String(idx + 1).padStart(2, "0")}
+                      </td>
+                      <td>
+                        <div className="font-medium text-base-content">{room.name}</div>
+                        {room.description && (
+                          <div className="text-xs text-base-content/40 mt-0.5 truncate max-w-xs">
+                            {room.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-sm text-base-content/70">{room.location || "—"}</td>
+                      <td>
+                        <span className="badge badge-ghost badge-sm">
+                          {room.capacity} người
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge badge-sm ${status.cls}`}>
+                          {status.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

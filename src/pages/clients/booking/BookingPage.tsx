@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRooms } from "../../../context/RoomContext";
+import { useRoomsQuery } from "../../../hooks/useRoomsQuery";
 
 const EMPTY_FORM = {
   roomId: "",
@@ -10,7 +10,9 @@ const EMPTY_FORM = {
 };
 
 export default function BookingPage() {
-  const { rooms } = useRooms();
+  const { data: rooms, isLoading } = useRoomsQuery();
+  const availableRooms = rooms?.filter((r) => r.status === "AVAILABLE") ?? [];
+
   const [form, setForm] = useState(EMPTY_FORM);
   const [success, setSuccess] = useState(false);
 
@@ -22,6 +24,7 @@ export default function BookingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // TODO: wire up to booking API endpoint
     setSuccess(true);
     setForm(EMPTY_FORM);
     setTimeout(() => setSuccess(false), 4000);
@@ -56,9 +59,7 @@ export default function BookingPage() {
             />
           </svg>
           <span className="font-medium">Đặt phòng thành công!</span>
-          <span className="text-sm opacity-80">
-            Thông tin đặt phòng đã được ghi nhận.
-          </span>
+          <span className="text-sm opacity-80">Thông tin đã được ghi nhận.</span>
         </div>
       )}
 
@@ -67,31 +68,41 @@ export default function BookingPage() {
         className="card bg-base-100 border border-base-200 shadow-sm"
       >
         <div className="card-body gap-5">
+          {/* Room select */}
           <div className="form-control">
             <label className="label pb-1.5">
-              <span className="label-text font-medium">Tên phòng</span>
+              <span className="label-text font-medium">
+                Phòng <span className="text-error">*</span>
+              </span>
             </label>
-            <select
-              name="roomId"
-              className="select w-full"
-              value={form.roomId}
-              onChange={handleChange}
-              required
-            >
-              <option value="" disabled>
-                Chọn phòng
-              </option>
-              {rooms.length === 0 && (
-                <option disabled>— Chưa có phòng nào —</option>
-              )}
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name} (tối đa {room.capacity} người)
+            {isLoading ? (
+              <div className="skeleton h-10 w-full rounded-lg" />
+            ) : (
+              <select
+                name="roomId"
+                className="select w-full"
+                value={form.roomId}
+                onChange={handleChange}
+                required
+              >
+                <option value="" disabled>
+                  Chọn phòng
                 </option>
-              ))}
-            </select>
+                {availableRooms.length === 0 && (
+                  <option disabled>— Không có phòng trống —</option>
+                )}
+                {availableRooms.map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.name}
+                    {room.location ? ` · ${room.location}` : ""}
+                    {` (${room.capacity} người)`}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
+          {/* Check-in / Check-out */}
           <div className="grid grid-cols-2 gap-4">
             <div className="form-control">
               <label className="label pb-1.5">
@@ -122,6 +133,7 @@ export default function BookingPage() {
             </div>
           </div>
 
+          {/* Guest name */}
           <div className="form-control">
             <label className="label pb-1.5">
               <span className="label-text font-medium">Tên khách</span>
@@ -137,6 +149,7 @@ export default function BookingPage() {
             />
           </div>
 
+          {/* Guest count */}
           <div className="form-control">
             <label className="label pb-1.5">
               <span className="label-text font-medium">Số lượng khách</span>
