@@ -1,8 +1,25 @@
-import { Outlet, NavLink } from "react-router";
+import { Outlet, NavLink, useNavigate } from "react-router";
+import { useAuth } from "../context/AuthContext";
+
+const AVATAR_COLORS: Record<string, string> = {
+  A: "bg-indigo-500",
+  N: "bg-emerald-500",
+  T: "bg-rose-500",
+};
 
 export default function ClientAppLayout() {
+  const { user, logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "font-semibold text-primary" : "text-base-content/60 hover:text-base-content transition-colors";
+    isActive
+      ? "font-semibold text-primary"
+      : "text-base-content/60 hover:text-base-content transition-colors";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-base-50" data-theme="light">
@@ -39,11 +56,13 @@ export default function ClientAppLayout() {
                 Danh sách phòng
               </NavLink>
             </li>
-            <li>
-              <NavLink to="/rooms/add" className={linkClass}>
-                Thêm phòng
-              </NavLink>
-            </li>
+            {isAdmin && (
+              <li>
+                <NavLink to="/rooms/add" className={linkClass}>
+                  Thêm phòng
+                </NavLink>
+              </li>
+            )}
             <li>
               <NavLink to="/booking" className={linkClass}>
                 Đặt phòng
@@ -53,9 +72,93 @@ export default function ClientAppLayout() {
         </div>
 
         <div className="navbar-end">
-          <span className="badge badge-ghost badge-sm text-base-content/40">
-            v1.0
-          </span>
+          {user ? (
+            <div className="dropdown dropdown-end">
+              <div
+                tabIndex={0}
+                role="button"
+                className="flex items-center gap-2.5 cursor-pointer group"
+              >
+                {/* Avatar */}
+                <div
+                  className={`size-8 rounded-full ${AVATAR_COLORS[user.avatar] ?? "bg-primary"} flex items-center justify-center text-white text-sm font-semibold shrink-0`}
+                >
+                  {user.avatar}
+                </div>
+                {/* Name + role */}
+                <div className="text-left hidden sm:block">
+                  <p className="text-sm font-medium text-base-content leading-tight">
+                    {user.name}
+                  </p>
+                  <p className="text-xs text-base-content/40 leading-tight">
+                    {user.role === "admin" ? "Quản trị viên" : "Khách"}
+                  </p>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="size-3.5 text-base-content/40 hidden sm:block"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+
+              {/* Dropdown menu */}
+              <ul
+                tabIndex={0}
+                className="dropdown-content menu bg-base-100 rounded-xl shadow-lg border border-base-200 w-52 mt-3 p-1.5 z-50"
+              >
+                <li className="px-3 py-2 mb-1 border-b border-base-200">
+                  <div className="flex flex-col gap-0.5 hover:bg-transparent cursor-default">
+                    <span className="text-xs font-medium text-base-content">
+                      {user.name}
+                    </span>
+                    <span className="text-xs text-base-content/40 truncate">
+                      {user.email}
+                    </span>
+                    {user.role === "admin" && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium w-fit mt-0.5">
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    className="text-error hover:bg-error/10 flex items-center gap-2 text-sm"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      />
+                    </svg>
+                    Đăng xuất
+                  </button>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <NavLink to="/login" className="btn btn-primary btn-sm">
+              Đăng nhập
+            </NavLink>
+          )}
         </div>
       </header>
 
