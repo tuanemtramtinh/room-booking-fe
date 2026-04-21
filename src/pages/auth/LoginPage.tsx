@@ -1,8 +1,26 @@
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { useAuth, type AuthUser } from "../../context/AuthContext";
+import { signInWithGoogle } from "../../api/auth";
+
+// Ambient declaration so TypeScript accepts `window.google` without importing
+// the full GIS type package. The detailed types live in src/types/google-gis.d.ts.
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google: any;
+  }
+}
 
 // ---------------------------------------------------------------------------
-// Mock accounts — replace with real Google OAuth later
+// Google OAuth Client ID
+// Replace this with your real Client ID from Google Cloud Console:
+// https://console.cloud.google.com/ → APIs & Services → Credentials → OAuth 2.0
+// ---------------------------------------------------------------------------
+const GOOGLE_CLIENT_ID = "1002611281170-vjmvi0vjac3s0hb869f00udgeu5l4jvq.apps.googleusercontent.com";
+
+// ---------------------------------------------------------------------------
+// Mock accounts — kept as a development fallback; remove before production
 // ---------------------------------------------------------------------------
 const MOCK_ACCOUNTS: AuthUser[] = [
   {
@@ -38,6 +56,83 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string })?.from ?? "/rooms";
+
+  useEffect(() => {
+    // Credential callback — passed directly to the GIS JS API instead of
+    // being registered as a global, which avoids stale-closure issues on
+    // SPA navigation.
+    const handleCredentialResponse = async (response: CredentialResponse) => {
+      try {
+        console.log("🔥🔥🔥 ĐÂY LÀ ID TOKEN CỦA BẠN:", response.credential);
+        // Step 1 — Exchange the Google JWT for an application token + user.
+        //          signInWithGoogle POSTs { credential } to POST /api/auth/google.
+        const result = await signInWithGoogle(response.credential);
+
+        // Step 2 — Map the backend user to our local AuthUser shape.
+        const appUser: AuthUser = {
+          name: result.user.name,
+          email: result.user.email,
+          // Use the first character of the name as the avatar placeholder.
+          avatar: result.user.name.charAt(0).toUpperCase(),
+          role: result.user.role,
+        };
+
+        // Step 3 — Persist the session and redirect to the original destination.
+        login(appUser);
+        navigate(from, { replace: true });
+      } catch (err) {
+        // TODO: replace console.error with a toast / inline error banner.
+        console.error("Google sign-in failed:", err);
+      }
+    };
+
+    // Initialise the GIS library and render the official button into the
+    // #google-signin-button container.
+    const initGIS = () => {
+      // Guard: the script tag may exist but not have finished parsing yet.
+      if (!window.google) return;
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+      });
+
+      const buttonEl = document.getElementById("google-signin-button");
+      if (buttonEl) {
+        window.google.accounts.id.renderButton(buttonEl, {
+          theme: "outline",
+          size: "large",
+          shape: "rectangular",
+          text: "signin_with",
+          logo_alignment: "left",
+        });
+      }
+    };
+
+    // Dynamically inject the GIS script the first time this page is visited.
+    // A stable id lets us detect SPA navigation back to this page and skip
+    // a duplicate network request — calling initGIS directly instead.
+    const SCRIPT_ID = "gis-client";
+    if (!document.getElementById(SCRIPT_ID)) {
+      const script = document.createElement("script");
+      script.id = SCRIPT_ID;
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = initGIS;
+      document.body.appendChild(script);
+    } else if (window.google) {
+      // Script tag already in DOM AND fully loaded — re-render the button
+      // into the freshly mounted container (e.g. SPA back-navigation).
+      initGIS();
+    } else {
+      // Script tag exists but is still downloading (e.g. slow network on
+      // first load, or HMR re-mount before onload fires). Wire up onload so
+      // initGIS runs as soon as parsing completes.
+      const existingScript = document.getElementById("gis-client") as HTMLScriptElement | null;
+      if (existingScript) existingScript.onload = initGIS;
+    }
+  }, [login, navigate, from]);
 
   const handleSelect = (account: AuthUser) => {
     login(account);
@@ -86,6 +181,20 @@ export default function LoginPage() {
 
           {/* Account list */}
           <div className="py-2">
+            {/* Google Sign-In button — rendered by google.accounts.id.renderButton() */}
+            <div className="flex justify-center px-6 pt-4 pb-2">
+              <div id="google-signin-button" />
+            </div>
+
+            {/* Divider between Google button and dev-only mock accounts */}
+            <div className="flex items-center gap-3 px-6 py-3">
+              <div className="flex-1 h-px bg-[#e8eaed]" />
+              <span className="text-xs text-[#5f6368] shrink-0">
+                hoặc chọn tài khoản thử nghiệm
+              </span>
+              <div className="flex-1 h-px bg-[#e8eaed]" />
+            </div>
+
             <p className="px-6 py-2 text-sm text-[#5f6368]">
               Chọn tài khoản
             </p>
