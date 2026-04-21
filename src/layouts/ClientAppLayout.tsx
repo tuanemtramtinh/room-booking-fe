@@ -1,102 +1,68 @@
-import { Outlet } from "react-router";
+import { Outlet, NavLink } from "react-router";
 
 export default function ClientAppLayout() {
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive ? "font-semibold text-primary" : "text-base-content/60 hover:text-base-content transition-colors";
+
   return (
-    <div className="drawer lg:drawer-open">
-      <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content">
-        {/* Navbar */}
-        <nav className="navbar w-full bg-base-300">
-          <label
-            htmlFor="my-drawer-4"
-            aria-label="open sidebar"
-            className="btn btn-square btn-ghost"
-          >
-            {/* Sidebar toggle icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              strokeWidth="2"
-              fill="none"
-              stroke="currentColor"
-              className="my-1.5 inline-block size-4"
-            >
-              <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
-              <path d="M9 4v16"></path>
-              <path d="M14 10l2 2l-2 2"></path>
-            </svg>
-          </label>
-          <div className="px-4">Navbar Title</div>
-        </nav>
-        {/* Page content here */}
-        <div className="p-4">
-          <Outlet />
+    <div className="min-h-screen bg-base-50" data-theme="light">
+      {/* Top Navbar */}
+      <header className="navbar bg-base-100 border-b border-base-200 shadow-xs sticky top-0 z-50 px-6">
+        <div className="navbar-start">
+          <div className="flex items-center gap-2.5">
+            <div className="size-7 rounded-lg bg-primary flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="size-4 text-primary-content"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+            </div>
+            <span className="font-bold text-base tracking-tight text-base-content">
+              RoomBook
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div className="drawer-side is-drawer-close:overflow-visible">
-        <label
-          htmlFor="my-drawer-4"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
-        <div className="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
-          {/* Sidebar content here */}
-          <ul className="menu w-full grow">
-            {/* List item */}
+        <div className="navbar-center">
+          <ul className="menu menu-horizontal gap-1 px-0">
             <li>
-              <button
-                className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                data-tip="Homepage"
-              >
-                {/* Home icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  strokeWidth="2"
-                  fill="none"
-                  stroke="currentColor"
-                  className="my-1.5 inline-block size-4"
-                >
-                  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path>
-                  <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                </svg>
-                <span className="is-drawer-close:hidden">Homepage</span>
-              </button>
+              <NavLink to="/rooms" className={linkClass}>
+                Danh sách phòng
+              </NavLink>
             </li>
-
-            {/* List item */}
             <li>
-              <button
-                className="is-drawer-close:tooltip is-drawer-close:tooltip-right"
-                data-tip="Settings"
-              >
-                {/* Settings icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  strokeWidth="2"
-                  fill="none"
-                  stroke="currentColor"
-                  className="my-1.5 inline-block size-4"
-                >
-                  <path d="M20 7h-9"></path>
-                  <path d="M14 17H5"></path>
-                  <circle cx="17" cy="17" r="3"></circle>
-                  <circle cx="7" cy="7" r="3"></circle>
-                </svg>
-                <span className="is-drawer-close:hidden">Settings</span>
-              </button>
+              <NavLink to="/rooms/add" className={linkClass}>
+                Thêm phòng
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/booking" className={linkClass}>
+                Đặt phòng
+              </NavLink>
             </li>
           </ul>
         </div>
-      </div>
+
+        <div className="navbar-end">
+          <span className="badge badge-ghost badge-sm text-base-content/40">
+            v1.0
+          </span>
+        </div>
+      </header>
+
+      {/* Page content */}
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <Outlet />
+      </main>
     </div>
   );
 }

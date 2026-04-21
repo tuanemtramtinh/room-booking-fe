@@ -1,8 +1,9 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, redirect } from "react-router";
 import ClientAppLayout from "./layouts/ClientAppLayout";
-import HomePage from "./pages/clients/home/HomePage";
-import DashboardPage from "./pages/admins/dashboard/DashboardPage";
-//Hihi
+import RoomsListPage from "./pages/clients/rooms/RoomsListPage";
+import AddRoomPage from "./pages/clients/rooms/AddRoomPage";
+import BookingPage from "./pages/clients/booking/BookingPage";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -10,11 +11,19 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: HomePage,
+        loader: () => redirect("/rooms"),
       },
       {
-        path: "/admin",
-        Component: DashboardPage,
+        path: "rooms",
+        Component: RoomsListPage,
+      },
+      {
+        path: "rooms/add",
+        Component: AddRoomPage,
+      },
+      {
+        path: "booking",
+        Component: BookingPage,
       },
     ],
   },
