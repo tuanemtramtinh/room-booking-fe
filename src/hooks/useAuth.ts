@@ -14,6 +14,7 @@ export type AuthContextType = {
   user: AuthUser | null;
   login: (user: AuthUser) => void;
   logout: () => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   isAdmin: boolean;
 };
 

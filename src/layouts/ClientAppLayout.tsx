@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router";
+import { isAxiosError } from "axios";
 import { useAuth } from "../hooks/useAuth";
+import { userApi } from "../api/users";
 
 const AVATAR_COLORS: Record<string, string> = {
   A: "bg-indigo-500",
@@ -8,8 +11,42 @@ const AVATAR_COLORS: Record<string, string> = {
 };
 
 export default function ClientAppLayout() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, updateUser, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profilePending, setProfilePending] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const openEditProfile = () => {
+    setProfileName(user?.name ?? "");
+    setProfileError(null);
+    setEditingProfile(true);
+  };
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!profileName.trim()) {
+      setProfileError("Tên không được để trống.");
+      return;
+    }
+    setProfilePending(true);
+    setProfileError(null);
+    try {
+      const updated = await userApi.update(user.id, { fullName: profileName.trim() });
+      updateUser({ name: updated.fullName ?? profileName.trim() });
+      setEditingProfile(false);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        setProfileError(err.response?.data?.message ?? "Cập nhật thất bại.");
+      } else {
+        setProfileError("Có lỗi xảy ra. Vui lòng thử lại.");
+      }
+    } finally {
+      setProfilePending(false);
+    }
+  };
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
@@ -68,6 +105,11 @@ export default function ClientAppLayout() {
                     Quản lý đặt phòng
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink to="/admin/users" className={linkClass}>
+                    Quản lý người dùng
+                  </NavLink>
+                </li>
               </>
             )}
             {!isAdmin && (
@@ -107,7 +149,7 @@ export default function ClientAppLayout() {
                     {user.name}
                   </p>
                   <p className="text-xs text-base-content/40 leading-tight">
-                    {user.role === "admin" ? "Quản trị viên" : "Khách"}
+                    {user.role === "admin" ? "Quản trị viên" : "Cán bộ"}
                   </p>
                 </div>
                 <svg
@@ -148,6 +190,26 @@ export default function ClientAppLayout() {
                 {/* Actions */}
                 <div className="p-1.5">
                   <button
+                    onClick={openEditProfile}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-base-content hover:bg-base-200 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="size-4 shrink-0"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                    Sửa thông tin
+                  </button>
+                  <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors"
                   >
@@ -182,6 +244,55 @@ export default function ClientAppLayout() {
       <main className="max-w-4xl mx-auto px-6 py-8">
         <Outlet />
       </main>
+
+      {/* Edit profile modal */}
+      {editingProfile && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-sm">
+            <h3 className="font-semibold text-base mb-1">Sửa thông tin cá nhân</h3>
+            <p className="text-xs text-base-content/50 mb-4 truncate">{user?.email}</p>
+            <form onSubmit={handleProfileSave} className="space-y-4">
+              <div>
+                <label className="label">
+                  <span className="label-text text-sm">Họ và tên</span>
+                </label>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  placeholder="Nhập tên đầy đủ"
+                  autoFocus
+                />
+              </div>
+              {profileError && (
+                <div className="alert alert-error py-2 text-sm">{profileError}</div>
+              )}
+              <div className="modal-action mt-2">
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => setEditingProfile(false)}
+                  disabled={profilePending}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  disabled={profilePending}
+                >
+                  {profilePending && (
+                    <span className="loading loading-spinner loading-xs" />
+                  )}
+                  Lưu
+                </button>
+              </div>
+            </form>
+          </div>
+          <div className="modal-backdrop" onClick={() => setEditingProfile(false)} />
+        </div>
+      )}
     </div>
   );
 }

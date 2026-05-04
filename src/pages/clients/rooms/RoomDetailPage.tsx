@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router";
 import { useRoomDetailQuery } from "../../../hooks/useRoomsQuery";
 import type { Booking, BookingStatus } from "../../../types/booking";
+import type { User } from "../../../types/user";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -36,6 +37,42 @@ function groupByDate(bookings: Booking[]): Record<string, Booking[]> {
     (acc[b.startDate] ??= []).push(b);
     return acc;
   }, {});
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function RequesterTag({ requester }: { requester: User }) {
+  const initials = requester.fullName
+    ? requester.fullName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
+    : requester.email[0].toUpperCase();
+
+  return (
+    <span className="flex flex-col gap-0.5 text-xs text-base-content/40">
+      <span className="flex items-center gap-1.5">
+        {requester.avatarUrl ? (
+          <img
+            src={requester.avatarUrl}
+            alt={requester.fullName ?? requester.email}
+            className="size-4 rounded-full object-cover shrink-0"
+          />
+        ) : (
+          <span className="size-4 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[9px] font-semibold shrink-0">
+            {initials}
+          </span>
+        )}
+        <span className="truncate">
+          {requester.fullName ?? requester.email}
+        </span>
+      </span>
+      {requester.fullName && (
+        <span className="pl-[22px] truncate text-base-content/30">
+          {requester.email}
+        </span>
+      )}
+    </span>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -174,11 +211,18 @@ export default function RoomDetailPage() {
                           <p className="text-sm font-medium text-base-content truncate">
                             {booking.title}
                           </p>
-                          {booking.attendeeCount != null && (
-                            <p className="text-xs text-base-content/40 mt-0.5">
-                              {booking.attendeeCount} người tham dự
-                            </p>
-                          )}
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            {booking.attendeeCount != null && (
+                              <p className="text-xs text-base-content/40">
+                                {booking.attendeeCount} người tham dự
+                              </p>
+                            )}
+                            {booking.requester && (
+                              <span className="mt-1">
+                                <RequesterTag requester={booking.requester} />
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Status */}

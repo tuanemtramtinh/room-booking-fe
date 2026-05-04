@@ -27,10 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     removeAccessToken();
     setUser(null);
   };
+  const updateUser = (updates: Partial<AuthUser>) =>
+    setUser((prev) => (prev ? { ...prev, ...updates } : prev));
   const isAdmin = user?.role === "admin";
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

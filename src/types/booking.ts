@@ -1,8 +1,11 @@
+import type { User } from "./user";
+
 export type BookingStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 export type Booking = {
   id: number;
   userId: number;
+  requester?: User | null;
   roomId: number;
   title: string;
   description: string | null;

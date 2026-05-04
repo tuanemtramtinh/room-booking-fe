@@ -6,6 +6,7 @@ import RoomDetailPage from "./pages/clients/rooms/RoomDetailPage";
 import BookingPage from "./pages/clients/booking/BookingPage";
 import BookingHistoryPage from "./pages/clients/booking/BookingHistoryPage";
 import BookingsManagementPage from "./pages/admins/bookings/BookingsManagementPage";
+import UsersManagementPage from "./pages/admins/users/UsersManagementPage";
 import LoginPage from "./pages/auth/LoginPage";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import UnauthorizedPage from "./pages/auth/UnauthorizedPage";
@@ -70,6 +71,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredRole="admin" loginPath="/admin/login">
             <BookingsManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/users",
+        element: (
+          <ProtectedRoute requiredRole="admin" loginPath="/admin/login">
+            <UsersManagementPage />
           </ProtectedRoute>
         ),
       },
