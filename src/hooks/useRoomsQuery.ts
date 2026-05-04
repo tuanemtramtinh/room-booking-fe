@@ -11,6 +11,14 @@ export function useRoomsQuery() {
   });
 }
 
+export function useRoomDetailQuery(id: number) {
+  return useQuery({
+    queryKey: ["rooms", id],
+    queryFn: () => roomApi.getById(id),
+    enabled: id > 0,
+  });
+}
+
 export function useCreateRoomMutation() {
   const queryClient = useQueryClient();
   return useMutation({

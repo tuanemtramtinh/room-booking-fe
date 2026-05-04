@@ -1,11 +1,6 @@
 import { Link } from "react-router";
 import { useRoomsQuery } from "../../../hooks/useRoomsQuery";
 
-const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  AVAILABLE: { label: "Còn trống", cls: "badge-success" },
-  OCCUPIED: { label: "Đang dùng", cls: "badge-warning" },
-  MAINTENANCE: { label: "Bảo trì", cls: "badge-error" },
-};
 
 export default function RoomsListPage() {
   const { data: rooms, isLoading, isError } = useRoomsQuery();
@@ -98,22 +93,22 @@ export default function RoomsListPage() {
                   <th>Tên phòng</th>
                   <th>Vị trí</th>
                   <th>Sức chứa</th>
-                  <th>Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
                 {rooms.map((room, idx) => {
-                  const status = STATUS_LABEL[room.status] ?? {
-                    label: room.status,
-                    cls: "badge-ghost",
-                  };
                   return (
                     <tr key={room.id} className="hover:bg-base-200/40 transition-colors">
                       <td className="text-base-content/40 font-mono text-sm">
                         {String(idx + 1).padStart(2, "0")}
                       </td>
                       <td>
-                        <div className="font-medium text-base-content">{room.name}</div>
+                        <Link
+                          to={`/rooms/${room.id}`}
+                          className="font-medium text-base-content hover:text-primary transition-colors"
+                        >
+                          {room.name}
+                        </Link>
                         {room.description && (
                           <div className="text-xs text-base-content/40 mt-0.5 truncate max-w-xs">
                             {room.description}
@@ -124,11 +119,6 @@ export default function RoomsListPage() {
                       <td>
                         <span className="badge badge-ghost badge-sm">
                           {room.capacity} người
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`badge badge-sm ${status.cls}`}>
-                          {status.label}
                         </span>
                       </td>
                     </tr>

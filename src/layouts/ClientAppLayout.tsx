@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 const AVATAR_COLORS: Record<string, string> = {
   A: "bg-indigo-500",
@@ -57,17 +57,33 @@ export default function ClientAppLayout() {
               </NavLink>
             </li>
             {isAdmin && (
-              <li>
-                <NavLink to="/rooms/add" className={linkClass}>
-                  Thêm phòng
-                </NavLink>
-              </li>
+              <>
+                <li>
+                  <NavLink to="/rooms/add" className={linkClass}>
+                    Thêm phòng
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/admin/bookings" className={linkClass}>
+                    Quản lý đặt phòng
+                  </NavLink>
+                </li>
+              </>
             )}
-            <li>
-              <NavLink to="/booking" className={linkClass}>
-                Đặt phòng
-              </NavLink>
-            </li>
+            {!isAdmin && (
+              <>
+                <li>
+                  <NavLink to="/booking" end className={linkClass}>
+                    Đặt phòng
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink to="/booking/history" className={linkClass}>
+                    Lịch sử
+                  </NavLink>
+                </li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -111,33 +127,33 @@ export default function ClientAppLayout() {
               </div>
 
               {/* Dropdown menu */}
-              <ul
+              <div
                 tabIndex={0}
-                className="dropdown-content menu bg-base-100 rounded-xl shadow-lg border border-base-200 w-52 mt-3 p-1.5 z-50"
+                className="dropdown-content bg-base-100 rounded-xl shadow-lg border border-base-200 w-56 mt-3 z-50 overflow-hidden"
               >
-                <li className="px-3 py-2 mb-1 border-b border-base-200">
-                  <div className="flex flex-col gap-0.5 hover:bg-transparent cursor-default">
-                    <span className="text-xs font-medium text-base-content">
-                      {user.name}
+                {/* User info */}
+                <div className="px-4 py-3 border-b border-base-200">
+                  <p className="text-sm font-medium text-base-content truncate">
+                    {user.name}
+                  </p>
+                  <p className="text-xs text-base-content/40 truncate mt-0.5">
+                    {user.email}
+                  </p>
+                  {user.role === "admin" && (
+                    <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium mt-1.5">
+                      Admin
                     </span>
-                    <span className="text-xs text-base-content/40 truncate">
-                      {user.email}
-                    </span>
-                    {user.role === "admin" && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 font-medium w-fit mt-0.5">
-                        Admin
-                      </span>
-                    )}
-                  </div>
-                </li>
-                <li>
+                  )}
+                </div>
+                {/* Actions */}
+                <div className="p-1.5">
                   <button
                     onClick={handleLogout}
-                    className="text-error hover:bg-error/10 flex items-center gap-2 text-sm"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-error hover:bg-error/10 transition-colors"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="size-4"
+                      className="size-4 shrink-0"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -151,8 +167,8 @@ export default function ClientAppLayout() {
                     </svg>
                     Đăng xuất
                   </button>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           ) : (
             <NavLink to="/login" className="btn btn-primary btn-sm">

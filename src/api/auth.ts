@@ -5,33 +5,44 @@
  * Centralising API calls here keeps components free of axios/fetch details.
  */
 
-import axios from "axios";
+import axiosInstance, { ACCESS_TOKEN_KEY } from "./axiosInstance";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-/** Payload sent to the backend when verifying a Google credential. */
+/** Payload sent to `POST /api/auth/google`. */
 interface GoogleSignInPayload {
-  /**
-   * The raw JWT credential string issued by Google.
-   * The backend must validate this token using Google's token-info endpoint
-   * or a server-side library (e.g. google-auth-library).
-   */
-  credential: string;
+  idToken: string;
+}
+
+/** User object returned inside the auth response. */
+export interface GoogleAuthUser {
+  id: number;
+  email: string;
+  fullName: string;
+  avatarUrl: string;
+  role: "ADMIN" | "STAFF";
+  status: "ACTIVE" | "INACTIVE";
 }
 
 /** Shape of the response returned by `POST /api/auth/google`. */
 export interface GoogleSignInResult {
-  /** Application-level access token (or session token) issued by your backend. */
-  token: string;
-  user: {
-    name: string;
-    email: string;
-    /** Single character used as an avatar placeholder. */
-    avatar: string;
-    role: "admin" | "guest";
-  };
+  accessToken: string;
+  tokenType: "Bearer";
+  user: GoogleAuthUser;
+}
+
+// ---------------------------------------------------------------------------
+// Token helpers
+// ---------------------------------------------------------------------------
+
+export function saveAccessToken(token: string): void {
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
+}
+
+export function removeAccessToken(): void {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
 }
 
 // ---------------------------------------------------------------------------
@@ -39,31 +50,51 @@ export interface GoogleSignInResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Sends the Google-issued JWT credential to the backend for verification.
+ * Sends the Google-issued ID token to the backend for verification.
  *
  * Backend contract:
  *   POST /api/auth/google
- *   Body:    { credential: "<google-jwt>" }
- *   Returns: { token: "<app-token>", user: { name, email, avatar, role } }
+ *   Body:    { idToken: "<google-id-token>" }
+ *   Returns: { accessToken, tokenType: "Bearer", user }
  *
- * The backend should:
- *   1. Verify the Google JWT (signature, audience, expiry).
- *   2. Look up or create the application user record.
- *   3. Return an application-level token and the user's profile.
- *
- * @param credential - The raw JWT string from `CredentialResponse.credential`.
+ * @param idToken - The raw JWT string from `CredentialResponse.credential`.
  * @throws AxiosError if the request fails or the backend rejects the token.
  */
 export async function signInWithGoogle(
-  credential: string,
+  idToken: string,
 ): Promise<GoogleSignInResult> {
-  const payload: GoogleSignInPayload = { credential };
-
-  // POST /api/auth/google — swap the Google JWT for an app token + user profile.
-  const { data } = await axios.post<GoogleSignInResult>(
+  const payload: GoogleSignInPayload = { idToken };
+  const { data } = await axiosInstance.post<GoogleSignInResult>(
     "/api/auth/google",
     payload,
   );
+  return data;
+}
 
+/** Payload sent to `POST /api/auth/admin`. */
+interface AdminSignInPayload {
+  email: string;
+  password: string;
+}
+
+/**
+ * Signs in as an admin using email + password (BCrypt).
+ *
+ * Backend contract:
+ *   POST /api/auth/admin
+ *   Body:    { email, password }
+ *   Returns: { accessToken, tokenType: "Bearer", user }
+ *
+ * @throws AxiosError 401 for wrong credentials, 403 for non-admin or inactive account.
+ */
+export async function signInAsAdmin(
+  email: string,
+  password: string,
+): Promise<GoogleSignInResult> {
+  const payload: AdminSignInPayload = { email, password };
+  const { data } = await axiosInstance.post<GoogleSignInResult>(
+    "/api/auth/admin",
+    payload,
+  );
   return data;
 }

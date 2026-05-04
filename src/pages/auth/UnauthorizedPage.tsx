@@ -30,8 +30,8 @@ export default function UnauthorizedPage() {
         <Link to="/rooms" className="btn btn-ghost btn-sm">
           Về trang chủ
         </Link>
-        <Link to="/login" className="btn btn-primary btn-sm">
-          Đăng nhập lại
+        <Link to="/admin/login" className="btn btn-primary btn-sm">
+          Đăng nhập Admin
         </Link>
       </div>
     </div>

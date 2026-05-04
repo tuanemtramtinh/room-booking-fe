@@ -1,28 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
-
-export type Role = "admin" | "guest";
-
-export type AuthUser = {
-  name: string;
-  email: string;
-  avatar: string;
-  role: Role;
-};
-
-type AuthContextType = {
-  user: AuthUser | null;
-  login: (user: AuthUser) => void;
-  logout: () => void;
-  isAdmin: boolean;
-};
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import { useState, useEffect, type ReactNode } from "react";
+import { AuthContext, type AuthUser } from "../hooks/useAuth";
+import { removeAccessToken } from "../api/auth";
 
 const STORAGE_KEY = "roombook_auth_user";
 
@@ -45,7 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const login = (user: AuthUser) => setUser(user);
-  const logout = () => setUser(null);
+  const logout = () => {
+    removeAccessToken();
+    setUser(null);
+  };
   const isAdmin = user?.role === "admin";
 
   return (
@@ -53,10 +34,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }
