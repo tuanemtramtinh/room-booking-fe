@@ -110,6 +110,11 @@ export default function ClientAppLayout() {
                     Quản lý người dùng
                   </NavLink>
                 </li>
+                <li>
+                  <NavLink to="/admin/statistics" className={linkClass}>
+                    Thống kê
+                  </NavLink>
+                </li>
               </>
             )}
             {!isAdmin && (

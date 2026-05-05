@@ -7,6 +7,7 @@ import BookingPage from "./pages/clients/booking/BookingPage";
 import BookingHistoryPage from "./pages/clients/booking/BookingHistoryPage";
 import BookingsManagementPage from "./pages/admins/bookings/BookingsManagementPage";
 import UsersManagementPage from "./pages/admins/users/UsersManagementPage";
+import RoomStatisticsPage from "./pages/admins/statistics/RoomStatisticsPage";
 import LoginPage from "./pages/auth/LoginPage";
 import AdminLoginPage from "./pages/auth/AdminLoginPage";
 import UnauthorizedPage from "./pages/auth/UnauthorizedPage";
@@ -79,6 +80,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute requiredRole="admin" loginPath="/admin/login">
             <UsersManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "admin/statistics",
+        element: (
+          <ProtectedRoute requiredRole="admin" loginPath="/admin/login">
+            <RoomStatisticsPage />
           </ProtectedRoute>
         ),
       },
