@@ -89,7 +89,7 @@ export default function ClientAppLayout() {
         <div className="navbar-center">
           <ul className="menu menu-horizontal gap-1 px-0">
             <li>
-              <NavLink to="/rooms" className={linkClass}>
+              <NavLink to="/rooms" end className={linkClass}>
                 Danh sách phòng
               </NavLink>
             </li>

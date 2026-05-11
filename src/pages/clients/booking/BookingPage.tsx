@@ -1,19 +1,24 @@
 import { useState } from "react";
 import { isAxiosError } from "axios";
-import { useRoomsQuery, useRoomDetailQuery } from "../../../hooks/useRoomsQuery";
+import {
+  useRoomsQuery,
+  useRoomDetailQuery,
+} from "../../../hooks/useRoomsQuery";
 import { useCreateBookingMutation } from "../../../hooks/useBookingMutation";
 import type { Booking, BookingStatus } from "../../../types/booking";
 
 const BOOKING_BADGE: Record<BookingStatus, { label: string; cls: string }> = {
-  APPROVED:  { label: "Đã duyệt",  cls: "badge-success" },
-  PENDING:   { label: "Chờ duyệt", cls: "badge-warning" },
-  REJECTED:  { label: "Từ chối",   cls: "badge-neutral" },
-  CANCELLED: { label: "Đã huỷ",   cls: "badge-neutral" },
+  APPROVED: { label: "Đã duyệt", cls: "badge-success" },
+  PENDING: { label: "Chờ duyệt", cls: "badge-warning" },
+  REJECTED: { label: "Từ chối", cls: "badge-neutral" },
+  CANCELLED: { label: "Đã huỷ", cls: "badge-neutral" },
 };
 
 function formatDate(date: string) {
   return new Date(date + "T00:00:00").toLocaleDateString("vi-VN", {
-    weekday: "short", day: "2-digit", month: "2-digit",
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
   });
 }
 
@@ -49,10 +54,12 @@ export default function BookingPage() {
   const [created, setCreated] = useState<Booking | null>(null);
 
   const selectedRoomId = form.roomId ? Number(form.roomId) : 0;
-  const { data: roomDetail, isLoading: detailLoading } = useRoomDetailQuery(selectedRoomId);
-  const visibleBookings = roomDetail?.bookings.filter(
-    (b) => b.status === "APPROVED" || b.status === "PENDING",
-  ) ?? [];
+  const { data: roomDetail, isLoading: detailLoading } =
+    useRoomDetailQuery(selectedRoomId);
+  const visibleBookings =
+    roomDetail?.bookings.filter(
+      (b) => b.status === "APPROVED" || b.status === "PENDING",
+    ) ?? [];
 
   const availableRooms = rooms?.filter((r) => r.status === "AVAILABLE") ?? [];
 
@@ -82,7 +89,9 @@ export default function BookingPage() {
         roomId: Number(form.roomId),
         title: form.title,
         description: form.description || undefined,
-        attendeeCount: form.attendeeCount ? Number(form.attendeeCount) : undefined,
+        attendeeCount: form.attendeeCount
+          ? Number(form.attendeeCount)
+          : undefined,
         startDate: form.startDate,
         startHour: toTimeString(form.startHour),
         endHour: toTimeString(form.endHour),
@@ -96,7 +105,9 @@ export default function BookingPage() {
           if (isAxiosError(err)) {
             const status = err.response?.status;
             if (status === 409) {
-              setApiError("Phòng không còn trống trong khung giờ này. Vui lòng chọn giờ hoặc phòng khác.");
+              setApiError(
+                "Phòng không còn trống trong khung giờ này. Vui lòng chọn giờ hoặc phòng khác.",
+              );
             } else if (status === 400) {
               const msg = err.response?.data?.message as string | undefined;
               setApiError(
@@ -155,7 +166,9 @@ export default function BookingPage() {
             <div className="w-full bg-base-200/50 rounded-xl p-4 text-left space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-base-content/50">Mã booking</span>
-                <span className="font-medium text-base-content">#{created.id}</span>
+                <span className="font-medium text-base-content">
+                  #{created.id}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-base-content/50">Tiêu đề</span>
@@ -166,17 +179,22 @@ export default function BookingPage() {
               {room && (
                 <div className="flex justify-between">
                   <span className="text-base-content/50">Phòng</span>
-                  <span className="font-medium text-base-content">{room.name}</span>
+                  <span className="font-medium text-base-content">
+                    {room.name}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-base-content/50">Ngày</span>
-                <span className="font-medium text-base-content">{created.startDate}</span>
+                <span className="font-medium text-base-content">
+                  {created.startDate}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-base-content/50">Thời gian</span>
                 <span className="font-medium text-base-content">
-                  {created.startHour.slice(0, 5)} – {created.endHour.slice(0, 5)}
+                  {created.startHour.slice(0, 5)} –{" "}
+                  {created.endHour.slice(0, 5)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -286,10 +304,12 @@ export default function BookingPage() {
               ) : (
                 <div className="space-y-3">
                   {Object.entries(
-                    visibleBookings.reduce<Record<string, typeof visibleBookings>>(
-                      (acc, b) => { (acc[b.startDate] ??= []).push(b); return acc; },
-                      {}
-                    )
+                    visibleBookings.reduce<
+                      Record<string, typeof visibleBookings>
+                    >((acc, b) => {
+                      (acc[b.startDate] ??= []).push(b);
+                      return acc;
+                    }, {}),
                   )
                     .sort(([a], [b]) => a.localeCompare(b))
                     .map(([date, bks]) => (
@@ -306,12 +326,15 @@ export default function BookingPage() {
                                 className="flex items-center gap-2 rounded-lg bg-base-100 border border-base-200 px-3 py-2 text-xs"
                               >
                                 <span className="font-mono tabular-nums text-base-content/70 shrink-0">
-                                  {bk.startHour.slice(0, 5)}–{bk.endHour.slice(0, 5)}
+                                  {bk.startHour.slice(0, 5)}–
+                                  {bk.endHour.slice(0, 5)}
                                 </span>
                                 <span className="truncate flex-1 text-base-content/60">
                                   {bk.title}
                                 </span>
-                                <span className={`badge badge-xs shrink-0 ${badge.cls}`}>
+                                <span
+                                  className={`badge badge-xs shrink-0 ${badge.cls}`}
+                                >
                                   {badge.label}
                                 </span>
                               </div>
@@ -409,9 +432,7 @@ export default function BookingPage() {
               />
             </div>
           </div>
-          {timeError && (
-            <p className="text-error text-xs -mt-3">{timeError}</p>
-          )}
+          {timeError && <p className="text-error text-xs -mt-3">{timeError}</p>}
 
           {/* Attendee count */}
           <div className="form-control">
@@ -435,7 +456,9 @@ export default function BookingPage() {
               className="btn btn-primary w-full"
               disabled={isPending}
             >
-              {isPending && <span className="loading loading-spinner loading-sm" />}
+              {isPending && (
+                <span className="loading loading-spinner loading-sm" />
+              )}
               {isPending ? "Đang gửi…" : "Đặt phòng"}
             </button>
           </div>
